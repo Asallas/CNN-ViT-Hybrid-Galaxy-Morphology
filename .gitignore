@@ -1,2 +1,4 @@
 data/images/
 Models/
+*.pth
+__pychache__/
