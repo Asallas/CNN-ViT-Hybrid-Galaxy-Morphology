@@ -1,4 +1,8 @@
-# 🌌 Combining CNNs and Transformers for Smarter Galaxy Classification
+---
+layout: home
+author: "Armando Sallas"
+title: "Combining CNNs and Transformers for Smarter Galaxy Classification"
+---
 
 ### How a hybrid model achieves high accuracy while reducing computation
 
