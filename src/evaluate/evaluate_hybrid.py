@@ -4,7 +4,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 import pandas as pd
 
-from dataset import GalaxyDataset
+from src.datasets.dataset import GalaxyDataset
 from metrics_utils import evaluate_predictions
 
 def evaluate_hybrid(cnn, vit, dataloader, device, threshold):
@@ -115,8 +115,8 @@ def main(cnn, vit, cnn_path, vit_path, csv_path, image_dir, transform):
     return results
 
 if __name__ == "__main__":
-    from ResNet50Model import get_model
-    from ViTModel import get_vit_model
+    from src.models.resnet50 import get_model
+    from src.models.vit import get_vit_model
     import torchvision.transforms as transforms
     cnn = get_model()
     vit = get_vit_model()

@@ -1,7 +1,7 @@
 import torch
 from PIL import Image
 import torchvision.transforms as transforms
-from ResNet50Model import get_model
+from src.models.resnet50 import get_model
 
 classes = ["elliptical", "spiral", "lenticular", "irregular"]
 
