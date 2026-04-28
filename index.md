@@ -48,6 +48,7 @@ CNNs, such as ResNet-50, are highly effective at detecting local patterns. They 
 At a high level, a CNN works by taking a preprocessed image and applying filters to extract features like edges, textures, and shapes. These features are progressively simplified, retaining only the most important information. Finally, the processed features are passed through classification layers to produce a label.
 
 ![CNN Diagram](assets/cnn_diagram.png)
+*<https://www.geeksforgeeks.org/deep-learning/convolutional-neural-network-cnn-in-machine-learning/>*
 
 A 2024 paper by Raul Urecheatu and Marc Frincu demonstrated a CNN architecture achieving 96.83% accuracy, outperforming standard models such as ResNet-50.
 
@@ -164,3 +165,13 @@ Future work could explore learning the gating mechanism instead of relying on a 
 Another direction is applying this approach to other domains, such as medical imaging, where similar tradeoffs between speed and accuracy exist.
 
 Overall, this project shows that combining models intelligently can be more effective than relying on a single approach. Rather than choosing between speed and performance, it is possible to achieve a balance between both.
+
+---
+
+## References
+
+Lin, J. Y.-Y., Liao, S.-M., Huang, H.-J., Kuo, W.-T., & Ou, O. H.-M. (2021). Galaxy Morphological Classification with Efficient Vision Transformer. ArXiv.org. <https://arxiv.org/abs/2110.01024>
+
+Ross E. Hart, Steven P. Bamford, Kyle W. Willett, Karen L. Masters, Carolin Cardamone, Chris J. Lintott, Robert J. Mackay, Robert C. Nichol, Christopher K. Rosslowe, Brooke D. Simmons, Rebecca J. Smethurst, Galaxy Zoo: comparing the demographics of spiral arm number and a new method for correcting redshift bias, Monthly Notices of the Royal Astronomical Society, Volume 461, Issue 4, 01 October 2016, Pages 3663–3682, <https://doi.org/10.1093/mnras/stw1588>
+
+Urechiatu, R., & Frincu, M. (2024). Improved Galaxy Morphology Classification with Convolutional Neural Networks. Universe, 10(6), 230. <https://doi.org/10.3390/universe10060230>
