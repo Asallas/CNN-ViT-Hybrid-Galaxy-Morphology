@@ -140,11 +140,13 @@ The hybrid system matched the accuracy of the Vision Transformer while selective
 
 ### Threshold Sensitivity
 
-| Threshold | Accuracy | ViT Usage |
-|----------|---------|----------|
-| 0.60 | 74.36% | 25% |
-| 0.80 | 75.38% | 63% |
-| 0.95 | 75.42% | 86% |
+| Threshold | Accuracy | F1 Score | Time per Image (ms) | ViT Usage |
+|----------|---------|----------|---------------------|----------|
+| 0.60 | 74.36% | 0.7362 | 3.14 | 25.07% |
+| 0.70 | 75.04% | 0.7426 | 4.341 | 46.40% |
+| 0.80 | 75.38% | 0.7460 | 5.348 | 63.44% |
+| 0.90 | 75.41% | 0.7465 | 6.323 | 78.63% |
+| 0.95 | 75.42% | 0.7465 | 6.798 | 86.48% |
 
 As the threshold increases, more images are passed to the Vision Transformer. This improves accuracy but also increases computation time.
 
