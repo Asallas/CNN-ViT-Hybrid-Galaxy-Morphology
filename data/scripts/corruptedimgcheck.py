@@ -1,29 +1,33 @@
 import os
 from PIL import Image
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from pathlib import Path
 
-IMAGE_DIR = "images"
-PROGRESS_INTERVAL = 5000
-MAX_WORKERS = os.cpu_count()
 
-def check_image(path):
+def check_image(image_path):
     try:
-        with Image.open(path) as img:
+        with Image.open(image_path) as img:
             img.verify()
         return None
     except Exception:
-        return path
+        return Path(image_path)
 
-if __name__ == '__main__':
-    files = [os.path.join(IMAGE_DIR, f) for f in os.listdir(IMAGE_DIR)]
+def validate_images(image_dir=None, progress_interval=5000, max_workers=None):
+    script_dir = Path(__file__).resolve().parent
+    data_dir = script_dir.parent
+    IMAGE_DIR = Path(image_dir) if image_dir else data_dir / "images" / "images_raw"
+    
+    max_workers = max_workers or os.cpu_count() or 8
+
+    files = [path for path in IMAGE_DIR.iterdir() if path.is_file()]
+
     total = len(files)
-
-    print(f"Checking {total} images using {MAX_WORKERS} workers...\n")
+    print(f"Checking {total} images with {max_workers} workers...")
 
     bad_images = []
     processed = 0
 
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
 
         futures = [executor.submit(check_image, f) for f in files]
 
@@ -35,15 +39,18 @@ if __name__ == '__main__':
             if result is not None:
                 bad_images.append(result)
 
-            if processed % PROGRESS_INTERVAL == 0:
+            if (progress_interval > 0 and processed % progress_interval == 0):
                 percent = (processed / total) * 100
                 print(f"{processed}/{total} ({percent:.2f}%) checked")
 
     print("\nFinished.")
-    print("Corrupted images:", len(bad_images))
+    print(f"Corrupted images: {len(bad_images):,}")
 
     if bad_images:
         print("\nList of corrupted files:")
         for img in bad_images:
             print(img)
-        print(img)
+    return bad_images
+
+if __name__ == "__main__":
+    validate_images()

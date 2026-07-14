@@ -1,7 +1,7 @@
 import torch
 from PIL import Image
 import torchvision.transforms as transforms
-from src.models.resnet50 import get_model
+from models.resnet50 import get_model
 
 classes = ["elliptical", "spiral", "lenticular", "irregular"]
 
@@ -17,7 +17,7 @@ model = get_model()
 model.load_state_dict(torch.load("resnet50_galaxy.pth"))
 model.eval()
 
-image = Image.open("data/images_224/587722981742084144.jpg")
+image = Image.open("data/images/images_224/587722981742084144.jpg")
 
 image = transform(image).unsqueeze(0)
 with torch.no_grad():

@@ -1,64 +1,97 @@
 import pandas as pd
 import asyncio
 import aiohttp
-import os
+from pathlib import Path
 
-CSV_FILE = "gz2_hart16.csv.gz"
-OUTPUT_DIR = "images_raw"
-IMG_SIZE = 424
-CONCURRENT_REQUESTS = 40
-MAX_RETRIES = 5
-
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-df = pd.read_csv(CSV_FILE)
-records = df[["dr7objid", "ra", "dec"]].to_dict("records")
-
-
-async def download_image(session, record):
+async def _download_image(session, record, semaphore, output_dir, img_size, max_retries):
 
     objid = record["dr7objid"]
     ra = record["ra"]
     dec = record["dec"]
 
-    filename = f"{OUTPUT_DIR}/{objid}.jpg"
+    filename = output_dir / f"{objid}.jpg"
 
-    if os.path.exists(filename):
+    if filename.exists():
         return
 
     url = (
         "https://skyserver.sdss.org/dr16/SkyServerWS/ImgCutout/getjpeg"
-        f"?ra={ra}&dec={dec}&scale=0.396&width={IMG_SIZE}&height={IMG_SIZE}"
+        f"?ra={ra}&dec={dec}&scale=0.396&width={img_size}&height={img_size}"
     )
+    async with semaphore:
+        for attempt in range(max_retries):
+            try:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        data = await response.read()
+                        if len(data) > 1000:
+                            with open(filename, "wb") as f:
+                                f.write(data)
+                            return None
 
-    for attempt in range(MAX_RETRIES):
-        try:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    data = await response.read()
-                    if len(data) > 1000:
-                        with open(filename, "wb") as f:
-                            f.write(data)
-                        return
-
-        except Exception:
-            pass
-        
-        await asyncio.sleep(0.5)
-
-
-async def main():
-
-    connector = aiohttp.TCPConnector(limit=CONCURRENT_REQUESTS)
-
-    async with aiohttp.ClientSession(connector=connector) as session:
-
-        tasks = [download_image(session, record) for record in records]
-
-        for i in range(0, len(tasks), CONCURRENT_REQUESTS):
-            batch = tasks[i:i+CONCURRENT_REQUESTS]
-            await asyncio.gather(*batch)
-            print(f"{i+len(batch)} images processed")
+            except aiohttp.ClientError:
+                pass
+            except asyncio.TimeoutError:
+                pass
+            
+            await asyncio.sleep(0.5)
+    
+    return objid
 
 
-asyncio.run(main())
+async def _download_all_images(records, output_dir, img_size, concurrent_requests, max_retries):
+
+    connector = aiohttp.TCPConnector(limit=concurrent_requests)
+
+    timeout = aiohttp.ClientTimeout(total=30)
+    semaphore = asyncio.Semaphore(concurrent_requests)
+    failed_objids = []
+
+    async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+
+        tasks = [
+            _download_image(session=session, 
+                                 record=record, 
+                                 semaphore=semaphore, 
+                                 output_dir=output_dir, 
+                                 img_size=img_size, 
+                                 max_retries=max_retries) 
+            for record in records]
+        total = len(tasks)
+        for i,task in enumerate(asyncio.as_completed(tasks), start=1):
+            result = await task
+            if result is not None:
+                failed_objids.append(result)
+            if i % concurrent_requests == 0:
+                print(f"i: {i:,}/{total:,} images processed")
+
+
+    return failed_objids
+
+def download_images(csv_file=None, output_dir=None, img_size=224, concurrent_requests=40, max_retries=5):
+    script_dir = Path(__file__).resolve().parent
+    data_dir = script_dir.parent
+    csv_file = Path(csv_file) if csv_file else data_dir / "raw" / "gz2_hart16.csv.gz"
+    output_dir = Path(output_dir) if output_dir else data_dir / "images" / "images_raw"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    df = pd.read_csv(csv_file)
+
+    required_columns = {"dr7objid", "ra", "dec"}
+
+    missing_cols = (required_columns - set(df.columns))
+
+    if missing_cols:
+        raise ValueError(f"CSV file is missing required columns: {missing_cols}")
+    
+    records = df[["dr7objid", "ra", "dec"]].to_dict("records")
+
+    print(f"Starting download of {len(records):,} images to {output_dir}...")
+
+    failed_objids = asyncio.run(_download_all_images(records, output_dir, img_size, concurrent_requests, max_retries))
+
+    print(f"Download complete. Failed downloads: {len(failed_objids):,}")
+    return failed_objids
+
+if __name__ == "__main__":
+    download_images()
